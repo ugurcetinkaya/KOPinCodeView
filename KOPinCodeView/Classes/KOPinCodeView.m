@@ -9,38 +9,38 @@
 #import "KOPinCodeView.h"
 
 @interface KOPinCodeView()<UITextFieldDelegate>{
-
+    
     FormView formView;
-
+    
     float borderWidth;
     UIColor *borderColor;
     UIColor *textColor;
     UIColor *backgroundSelectColor;
     UIColor *errorColor;
     UIFont *textFont;
-
+    
     UIKeyboardType keyboardType;
-
-
+    
+    
     NSString*  enterPinText;
     NSString*  confirmPinText;
-
+    
     UIColor *labelColor;
     UIFont  *labelFont;
-
+    
     float labelHeight;
-
+    
     UIView *selectView;
     UIView *deselectView;
-
+    
     int selectIndex;
     BOOL confirmPin;
     BOOL secureText;
-
+    
     int pinCount;
-
+    
     NSMutableArray *textFieldArray;
-
+    
 }
 
 @end
@@ -132,13 +132,13 @@ typedef void (^KOPinCodeViewCallback)(void);
 #pragma mark - Load Default Settings
 
 -(void)loadDefaultSettings{
-
+    
     //------------------|
     //---UIView---------|
     //------------------|
     formView = kCircle;
     //Border View
-    borderWidth             =   1.0;
+    borderWidth             =   3.0;
     //Color Border View
     borderColor             =  [UIColor blackColor];
     //Color BackGround View in state Selection
@@ -171,7 +171,7 @@ typedef void (^KOPinCodeViewCallback)(void);
     secureText              =   YES;
     //Keyboard Type
     keyboardType = UIKeyboardTypeNumberPad;
-
+    
 }
 
 
@@ -179,13 +179,13 @@ typedef void (^KOPinCodeViewCallback)(void);
 
 //init Pin code view for IBOutlet
 -(void)initPinWithCountView:(int)count{
-
+    
     float width =  (self.frame.size.width-self.frame.size.width/6)/count;
     if (width>self.frame.size.height) {
         width = self.frame.size.height;
     }
     textFont                =  [UIFont systemFontOfSize:width/2];
-
+    
     [self initPinViewWithConfirmPIN:confirmPin
                         countSymbol:count
                          sizeSimbol:CGSizeMake(width, width)
@@ -197,7 +197,7 @@ typedef void (^KOPinCodeViewCallback)(void);
                      countSymbol:(int)count
                       sizeSimbol:(CGSize)size
                         formView:(FormView)form{
-
+    
     for (UIView *view in [self subviews])
     {
         [view removeFromSuperview];
@@ -209,39 +209,43 @@ typedef void (^KOPinCodeViewCallback)(void);
     pinCount = count;
     confirmPin = confirm;
     labelHeight = size.height;
-
+    
     float fullWidth =   (size.width+size.width/6)*count;
     float fullHeight =  (size.height*2+labelHeight*2>self.frame.size.height) ? self.frame.size.height : size.height+labelHeight*2;
-
+    
     float xCenter = self.bounds.size.width/2-fullWidth/2+size.width/12;
     float yCenter = (confirm == NO) ? self.bounds.size.height/2 - size.height/2 : self.frame.size.height/2-fullHeight/2 ;
-
+    
     count = (confirm == NO) ? count : count*2;
-
+    
     textFieldArray = [NSMutableArray array];
     int b = 0;
     for (int i = 0; i< count; i++) {
-
+        
         float x = 0.0;
         float y = yCenter;
         if (confirm == YES) {
             int a = (i<count/2) ? i : b++;
-
+            
             x = (i<count/2) ? xCenter+(size.width*a+(size.width/6)*a) : xCenter+(size.width*a+(size.width/6)*a);
             y = (i<count/2) ? yCenter+labelHeight : yCenter+labelHeight*2+size.height;
         }else{
             x = (i>0) ? xCenter+(size.width*i+(size.width/6)*i) : xCenter;
         }
-
+        
         UIView *view;
         if (!view) {
             view  = [[UIView alloc]initWithFrame:CGRectMake(x, y, size.width, size.height)];
             view.tag = 100+i;
-            view.layer.borderWidth  = (form == kNone)? 0 : borderWidth;
-            view.layer.borderColor  = (form == kNone)? [borderColor colorWithAlphaComponent:0.0].CGColor : borderColor.CGColor;
-            view.layer.cornerRadius = (form == kCircle)? size.width/2 : 0 ;
             view.backgroundColor = [backgroundSelectColor colorWithAlphaComponent:0.0];
-
+            
+            CALayer *border = [CALayer layer];
+            border.borderColor = [UIColor darkGrayColor].CGColor;
+            border.frame = CGRectMake(0, size.height - borderWidth, size.width, size.height);
+            border.borderWidth = borderWidth;
+            [view.layer addSublayer:border];
+            view.layer.masksToBounds = YES;
+            
             [self addSubview:view];
         }
         UITextField *textField;
@@ -257,9 +261,9 @@ typedef void (^KOPinCodeViewCallback)(void);
             [view addSubview:textField];
             [textFieldArray addObject:textField];
         }
-
+        
     }
-
+    
     if (confirm == YES) {
         UILabel *pinTitleLabel;
         if (!pinTitleLabel) {
@@ -308,7 +312,7 @@ typedef void (^KOPinCodeViewCallback)(void);
             if (show == NO) {
                 if (subview.tag == textField.tag) {
                     selectView = subview;
-
+                    
                     NSDictionary *dic = @{@"id":textField};
                     [NSTimer scheduledTimerWithTimeInterval:0.8 target:self selector:@selector(secureTextEntry:) userInfo:dic repeats:NO];
                 }
@@ -318,9 +322,9 @@ typedef void (^KOPinCodeViewCallback)(void);
                 }
             }
         }];
-
+        
     }
-
+    
     [self animationViewBackGround:deselectView andColor:backgroundSelectColor andDuration:0.5];
     [self animationViewBackGround:selectView andColor:[backgroundSelectColor colorWithAlphaComponent:0.0] andDuration:0.5];
 }
@@ -370,7 +374,7 @@ typedef void (^KOPinCodeViewCallback)(void);
             }
         }
     }
-
+    
     return NO;
 }
 
@@ -394,7 +398,7 @@ typedef void (^KOPinCodeViewCallback)(void);
         }else{
             [self completPin:array andString:string];
         }
-
+        
     }else{
         UITextField *tf = [errorArray firstObject];
         for (UIView *view in self.subviews) {
@@ -404,15 +408,15 @@ typedef void (^KOPinCodeViewCallback)(void);
             }
         }
     }
-
+    
 }
 
 -(void)validationPIN:(NSArray*)pinArray{
     NSMutableArray *stringArray = [NSMutableArray array];
     int b = (int)pinArray.count/2;
-
+    
     for (int i = 0; i < pinArray.count/2; i++) {
-
+        
         if ([[pinArray objectAtIndex:i] isEqualToString:[pinArray objectAtIndex:b]]) {
             [stringArray addObject:[pinArray objectAtIndex:i]];
         }else{
@@ -425,7 +429,7 @@ typedef void (^KOPinCodeViewCallback)(void);
                         [self animatioErrorCell:view andTextField:tf andSelect:(i == (int)(textFieldArray.count/2))? YES: NO];
                     }
                 }
-
+                
             }
             return;
         }
@@ -434,7 +438,7 @@ typedef void (^KOPinCodeViewCallback)(void);
     if (pinArray.count/2==stringArray.count) {
         [self completPin:stringArray andString:[stringArray componentsJoinedByString:@""]];
     }
-
+    
 }
 
 -(void)animatioErrorCell:(UIView*)view andTextField:(UITextField*)textField andSelect:(BOOL)select{
@@ -442,7 +446,7 @@ typedef void (^KOPinCodeViewCallback)(void);
     [UIView animateWithDuration:0.9 animations:^{
         view.backgroundColor = [errorColor colorWithAlphaComponent:1.0];
     }completion:^(BOOL finished) {
-
+        
         [UIView animateWithDuration:0.5 animations:^{
             view.backgroundColor = [errorColor colorWithAlphaComponent:0.0];
         }completion:^(BOOL finished) {
@@ -453,7 +457,7 @@ typedef void (^KOPinCodeViewCallback)(void);
                 if (select==YES) {
                     [textField becomeFirstResponder];
                 }
-
+                
             }];
         }];
     }];
@@ -465,7 +469,7 @@ typedef void (^KOPinCodeViewCallback)(void);
     if(callback){
         callback();
     }
-
+    
 }
 
 -(void)becomeFirstCell{
